@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz Lima - ¿Cuánto sabes del Metro de Lima?</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #2196F3, #03A9F4);
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .quiz-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2196F3;
+            margin: 0 0 10px 0;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin: 0 0 30px 0;
+            font-size: 16px;
+        }
+        
+        .quiz-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .info-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 100px;
+        }
+        
+        .info-box .label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .info-box .value {
+            font-size: 20px;
+            color: #2196F3;
+        }
+        
+        .question-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 5px solid #2196F3;
+        }
+        
+        .question {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+        
+        .answers {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .answer-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 15px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .answer-btn:hover {
+            border-color: #2196F3;
+            background: #f3f8ff;
+        }
+        
+        .answer-btn.correct {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .answer-btn.incorrect {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #2196F3, #03A9F4);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .next-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+            display: none;
+        }
+        
+        .next-btn:hover {
+            background: #1976D2;
+        }
+        
+        .final-score {
+            display: none;
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+        
+        .restart-btn {
+            background: white;
+            color: #4CAF50;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>🚇 Quiz Lima</h1>
+        <div class="subtitle">¿Cuánto sabes del Metro de Lima?</div>
+        
+        <div class="quiz-info">
+            <div class="info-box">
+                <div class="label">PREGUNTA</div>
+                <div class="value" id="questionNumber">1/10</div>
+            </div>
+            <div class="info-box">
+                <div class="label">PUNTOS</div>
+                <div class="value" id="score">0</div>
+            </div>
+            <div class="info-box">
+                <div class="label">CORRECTAS</div>
+                <div class="value" id="correct">0</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 10%"></div>
+        </div>
+        
+        <div class="question-container" id="questionContainer">
+            <div class="question" id="question">Cargando pregunta...</div>
+            <div class="answers" id="answers"></div>
+            <button class="next-btn" id="nextBtn">Siguiente Pregunta</button>
+        </div>
+        
+        <div class="final-score" id="finalScore">
+            <h2>🎉 ¡Quiz Completado!</h2>
+            <p id="finalText"></p>
+            <button class="restart-btn" onclick="startQuiz()">🔄 Jugar de Nuevo</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "¿En qué año se inauguró la Línea 1 del Metro de Lima?",
+                answers: ["2011", "2012", "2014", "2010"],
+                correct: 0
+            },
+            {
+                question: "¿Cuántas estaciones tiene la Línea 1 del Metro de Lima?",
+                answers: ["24", "26", "28", "30"],
+                correct: 1
+            },
+            {
+                question: "¿Cuál es la estación terminal sur de la Línea 1?",
+                answers: ["Villa El Salvador", "Pumacahua", "San Juan", "Atocongo"],
+                correct: 3
+            },
+            {
+                question: "¿Qué empresa opera el Metro de Lima?",
+                answers: ["Metro de Lima", "GyM Ferrovías", "Rutas de Lima", "Protransporte"],
+                correct: 1
+            },
+            {
+                question: "¿Cuál es la estación de transferencia entre Línea 1 y Línea 2?",
+                answers: ["Gamarra", "Nicolás Arriola", "La Cultura", "Grau"],
+                correct: 2
+            },
+            {
+                question: "¿Cuántos kilómetros de extensión tiene la Línea 1?",
+                answers: ["32 km", "35 km", "38 km", "41 km"],
+                correct: 1
+            },
+            {
+                question: "¿En qué distrito NO hay estaciones de la Línea 1?",
+                answers: ["San Juan de Lurigancho", "Lima", "Miraflores", "Villa El Salvador"],
+                correct: 2
+            },
+            {
+                question: "¿Cuál es el color oficial de la Línea 1 del Metro?",
+                answers: ["Azul", "Verde", "Rojo", "Naranja"],
+                correct: 1
+            },
+            {
+                question: "¿Qué tarjeta se usa para pagar en el Metro de Lima?",
+                answers: ["Metro Card", "Lima Pass", "Tarjeta Lima", "Tarjeta Metro"],
+                correct: 2
+            },
+            {
+                question: "¿Cuál es la estación más profunda de la Línea 1?",
+                answers: ["Grau", "Gamarra", "Nicolás Arriola", "La Cultura"],
+                correct: 0
+            }
+        ];
+        
+        let currentQuestion = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let selectedAnswer = null;
+        let gameRunning = false;
+        
+        // TelemetroAPI Integration
+        window.TelemetroAPI = {
+            onGameStart: function() {
+                console.log('🎮 Quiz Lima iniciado');
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'gameStart',
+                        game: 'quiz-lima'
+                    }));
+                }
+            },
+            onQuestionAnswered: function(questionNum, correct, totalCorrect) {
+                console.log('❓ Pregunta respondida:', questionNum, correct ? 'CORRECTA' : 'INCORRECTA');
+                const points = correct ? 10 : 0;
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'questionAnswered',
+                        game: 'quiz-lima',
+                        question: questionNum,
+                        correct: correct,
+                        totalCorrect: totalCorrect,
+                        points: points
+                    }));
+                }
+            },
+            onQuizCompleted: function(finalScore, totalCorrect, totalQuestions) {
+                console.log('🏆 Quiz completado:', finalScore, 'correctas:', totalCorrect);
+                const bonusPoints = totalCorrect >= 8 ? 50 : totalCorrect >= 5 ? 25 : 0;
+                const totalPoints = finalScore + bonusPoints;
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'quizCompleted',
+                        game: 'quiz-lima',
+                        finalScore: finalScore,
+                        correct: totalCorrect,
+                        total: totalQuestions,
+                        bonusPoints: bonusPoints,
+                        totalPoints: totalPoints
+                    }));
+                }
+            }
+        };
+
+        function displayQuestion() {
+            if (currentQuestion >= questions.length) {
+                showFinalScore();
+                return;
+            }
+            
+            const q = questions[currentQuestion];
+            
+            document.getElementById('question').textContent = q.question;
+            document.getElementById('questionNumber').textContent = `${currentQuestion + 1}/${questions.length}`;
+            document.getElementById('progressFill').style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+            
+            const answersContainer = document.getElementById('answers');
+            answersContainer.innerHTML = '';
+            
+            q.answers.forEach((answer, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = `${String.fromCharCode(65 + index)}. ${answer}`;
+                btn.onclick = () => selectAnswer(index);
+                answersContainer.appendChild(btn);
+            });
+            
+            document.getElementById('nextBtn').style.display = 'none';
+            selectedAnswer = null;
+        }
+
+        function selectAnswer(answerIndex) {
+            if (selectedAnswer !== null) return;
+            
+            selectedAnswer = answerIndex;
+            const q = questions[currentQuestion];
+            const correct = answerIndex === q.correct;
+            
+            if (correct) {
+                score += 10;
+                correctAnswers++;
+            }
+            
+            // Update UI
+            document.getElementById('score').textContent = score;
+            document.getElementById('correct').textContent = correctAnswers;
+            
+            // Color the answers
+            const answerBtns = document.querySelectorAll('.answer-btn');
+            answerBtns.forEach((btn, index) => {
+                if (index === q.correct) {
+                    btn.classList.add('correct');
+                } else if (index === answerIndex && !correct) {
+                    btn.classList.add('incorrect');
+                }
+                btn.style.pointerEvents = 'none';
+            });
+            
+            document.getElementById('nextBtn').style.display = 'block';
+            
+            // Trigger answer event
+            window.TelemetroAPI.onQuestionAnswered(currentQuestion + 1, correct, correctAnswers);
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            displayQuestion();
+        }
+
+        function showFinalScore() {
+            document.getElementById('questionContainer').style.display = 'none';
+            document.getElementById('finalScore').style.display = 'block';
+            
+            let message = '';
+            if (correctAnswers >= 8) {
+                message = '¡Excelente! Eres un experto del Metro de Lima 🏆';
+            } else if (correctAnswers >= 5) {
+                message = '¡Bien! Conoces bastante del Metro 👍';
+            } else {
+                message = '¡Sigue aprendiendo sobre el Metro! 📚';
+            }
+            
+            document.getElementById('finalText').innerHTML = `
+                <strong>Puntuación Final: ${score} puntos</strong><br>
+                Respuestas correctas: ${correctAnswers}/${questions.length}<br><br>
+                ${message}
+            `;
+            
+            window.TelemetroAPI.onQuizCompleted(score, correctAnswers, questions.length);
+        }
+
+        function startQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            correctAnswers = 0;
+            selectedAnswer = null;
+            gameRunning = true;
+            
+            document.getElementById('questionContainer').style.display = 'block';
+            document.getElementById('finalScore').style.display = 'none';
+            
+            document.getElementById('score').textContent = score;
+            document.getElementById('correct').textContent = correctAnswers;
+            
+            displayQuestion();
+            window.TelemetroAPI.onGameStart();
+        }
+
+        // Event listeners
+        document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+        
+        document.addEventListener('keydown', function(e) {
+            if (selectedAnswer !== null) return;
+            
+            const keyMap = { '1': 0, '2': 1, '3': 2, '4': 3, 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+            if (keyMap[e.key.toLowerCase()] !== undefined) {
+                selectAnswer(keyMap[e.key.toLowerCase()]);
+            }
+        });
+
+        // Start the quiz
+        startQuiz();
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+services:
+  # ========== API DASHBOARD BACKEND ==========
+  api-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: api-dashboard
+    ports:
+      - "6000:5000"  # Puerto externo 6000, interno 5000
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=${REDIS_URL}
+      - INFLUXDB_URL=${INFLUXDB_URL}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_VERIFY_SERVICE_SID=${TWILIO_VERIFY_SERVICE_SID}
+      - TWILIO_ENABLED=true
+      # Radio AI Configuration
+      - RADIO_AI_ENABLED=true
+      - MUBERT_AI_ENABLED=true
+      - MUBERT_API_KEY=${MUBERT_API_KEY}
+      - MUBERT_COMPANY_ID=${MUBERT_COMPANY_ID}
+      - MUBERT_CUSTOMER_ID=${MUBERT_CUSTOMER_ID}
+      - MUBERT_CUSTOMER_TOKEN=${MUBERT_CUSTOMER_TOKEN}
+      - MUBERT_API_BASE_URL=https://music-api.mubert.com/api/v3
+      # Configuración específica para api-dashboard
+      - CLIENT_ORIGIN=https://api-dashboard.telemetro.pe
+      - API_BASE_URL=https://api-dashboard.telemetro.pe
+    volumes:
+      - ./uploads:/app/uploads
+      - ./recordings:/app/recordings
+      - ./logs:/app/logs
+      - ./public:/app/public:ro
+    restart: unless-stopped
+    networks:
+      - metro-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  metro-network:
+    external: true
+    name: telemetro-backend_metro-network

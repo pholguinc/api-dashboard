@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Flappy Metro - Vuela entre las estaciones del Metro de Lima</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #4FC3F7, #29B6F6);
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        #gameCanvas {
+            border: 3px solid #0277BD;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%);
+        }
+        
+        #gameInfo {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            text-align: center;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameInfo">
+        <h1>🚇 Flappy Metro</h1>
+        <div id="score">Puntos: 0</div>
+    </div>
+    
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    
+    <div id="instructions">
+        Toca o presiona ESPACIO para volar<br>
+        Evita chocar con las estaciones del Metro
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game variables
+        let gameRunning = false;
+        let score = 0;
+        let bird = { x: 50, y: 300, velocity: 0, size: 30 };
+        let pipes = [];
+        let gameSpeed = 2;
+        
+        // TelemetroAPI Integration
+        window.TelemetroAPI = {
+            onGameStart: function() {
+                console.log('🎮 Flappy Metro iniciado');
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'gameStart',
+                        game: 'flappy-metro'
+                    }));
+                }
+            },
+            onScoreUpdate: function(score) {
+                const points = score * 5; // 5 puntos por estación superada
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'scoreUpdate',
+                        game: 'flappy-metro',
+                        score: score,
+                        points: points
+                    }));
+                }
+            },
+            onGameOver: function(finalScore) {
+                console.log('💀 Flappy Metro terminado:', finalScore);
+                const points = finalScore * 5 + (finalScore > 10 ? 25 : 0); // Bonus por buen score
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'gameOver',
+                        game: 'flappy-metro',
+                        finalScore: finalScore,
+                        points: points
+                    }));
+                }
+            }
+        };
+
+        function startGame() {
+            gameRunning = true;
+            bird = { x: 50, y: 300, velocity: 0, size: 30 };
+            pipes = [];
+            score = 0;
+            gameSpeed = 2;
+            
+            updateScore();
+            gameLoop();
+            window.TelemetroAPI.onGameStart();
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = `Puntos: ${score}`;
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update bird
+            bird.velocity += 0.5; // gravity
+            bird.y += bird.velocity;
+            
+            // Draw bird
+            ctx.fillStyle = '#ff6b35';
+            ctx.fillRect(bird.x - bird.size/2, bird.y - bird.size/2, bird.size, bird.size);
+            
+            // Update pipes
+            pipes.forEach((pipe, index) => {
+                pipe.x -= gameSpeed;
+                
+                // Draw pipes
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(pipe.x, 0, 50, pipe.top);
+                ctx.fillRect(pipe.x, pipe.bottom, 50, canvas.height - pipe.bottom);
+                
+                // Check for scoring
+                if (!pipe.scored && pipe.x + 50 < bird.x) {
+                    score++;
+                    pipe.scored = true;
+                    updateScore();
+                    window.TelemetroAPI.onScoreUpdate(score);
+                }
+                
+                // Remove off-screen pipes
+                if (pipe.x + 50 < 0) {
+                    pipes.splice(index, 1);
+                }
+                
+                // Check collision
+                if (bird.x + bird.size/2 > pipe.x && bird.x - bird.size/2 < pipe.x + 50) {
+                    if (bird.y - bird.size/2 < pipe.top || bird.y + bird.size/2 > pipe.bottom) {
+                        gameOver();
+                        return;
+                    }
+                }
+            });
+            
+            // Check ground/ceiling collision
+            if (bird.y + bird.size/2 > canvas.height || bird.y - bird.size/2 < 0) {
+                gameOver();
+                return;
+            }
+            
+            // Spawn new pipes
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
+                const gap = 150;
+                const minTop = 50;
+                const maxTop = canvas.height - gap - 50;
+                const top = Math.random() * (maxTop - minTop) + minTop;
+                
+                pipes.push({
+                    x: canvas.width,
+                    top: top,
+                    bottom: top + gap,
+                    scored: false
+                });
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            window.TelemetroAPI.onGameOver(score);
+            
+            // Show game over message
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 36px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('¡PERDISTE!', canvas.width/2, canvas.height/2 - 50);
+            
+            ctx.font = 'bold 24px Arial';
+            ctx.fillText(`Puntuación: ${score}`, canvas.width/2, canvas.height/2);
+            
+            ctx.font = '18px Arial';
+            ctx.fillText('Toca para reiniciar', canvas.width/2, canvas.height/2 + 50);
+        }
+
+        function flap() {
+            if (gameRunning) {
+                bird.velocity = -8;
+            } else {
+                startGame();
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', function(e) {
+            if (e.key === ' ' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                flap();
+            }
+        });
+
+        canvas.addEventListener('click', flap);
+        canvas.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            flap();
+        });
+
+        // Start the game
+        startGame();
+    </script>
+</body>
+</html>
