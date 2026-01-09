@@ -19,8 +19,8 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: env.nodeEnv === 'production' 
-          ? 'https://api-dashboard.telemetro.pe' 
+        url: env.nodeEnv === 'production'
+          ? 'https://api-dashboard.telemetro.pe'
           : `http://localhost:${env.port}`,
         description: env.nodeEnv === 'production' ? 'Servidor de Producción' : 'Servidor de Desarrollo'
       }
@@ -386,57 +386,141 @@ const options: swaggerJsdoc.Options = {
             },
             title: {
               type: 'string',
-              example: 'Clip divertido de comedia'
+              maxLength: 100,
+              example: 'clip prueba',
+              description: 'Título del clip'
             },
             description: {
               type: 'string',
-              example: 'Descripción del clip'
-            },
-            videoUrl: {
-              type: 'string',
-              format: 'uri',
-              example: 'https://example.com/video.mp4'
-            },
-            thumbnailUrl: {
-              type: 'string',
-              format: 'uri',
-              example: 'https://example.com/thumbnail.jpg'
+              maxLength: 500,
+              example: 'clip prueba',
+              description: 'Descripción del clip'
             },
             category: {
               type: 'string',
               enum: ['comedy', 'music', 'dance', 'food', 'travel', 'news', 'sports', 'education'],
-              example: 'comedy'
+              example: 'comedy',
+              description: 'Categoría del clip'
+            },
+            youtubeId: {
+              type: 'string',
+              example: 'clip_1767932451048_tem69zvns',
+              description: 'ID único del video'
+            },
+            youtubeUrl: {
+              type: 'string',
+              format: 'uri',
+              example: 'https://api-dashboard.telemetro.pe/uploads/ads/ad-video-1767932452212-42695974.mp4',
+              description: 'URL del video'
+            },
+            thumbnailUrl: {
+              type: 'string',
+              format: 'uri',
+              example: 'https://via.placeholder.com/640x360.png?text=No+Thumbnail',
+              description: 'URL de la imagen de portada'
+            },
+            duration: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 180,
+              example: 30,
+              description: 'Duración del clip en segundos'
+            },
+            creator: {
+              type: 'object',
+              properties: {
+                name: {
+                  type: 'string',
+                  maxLength: 100,
+                  example: 'clip prueba',
+                  description: 'Nombre del creador'
+                },
+                channel: {
+                  type: 'string',
+                  maxLength: 100,
+                  example: 'clip prueba',
+                  description: 'Canal del creador'
+                },
+                avatarUrl: {
+                  type: 'string',
+                  format: 'uri',
+                  example: 'https://example.com/avatar.jpg',
+                  description: 'URL del avatar del creador'
+                }
+              },
+              required: ['name', 'channel'],
+              description: 'Información del creador del clip'
             },
             status: {
               type: 'string',
               enum: ['draft', 'active', 'paused', 'reported', 'removed'],
-              example: 'active'
+              default: 'draft',
+              example: 'draft',
+              description: 'Estado del clip'
+            },
+            isVertical: {
+              type: 'boolean',
+              default: true,
+              example: true,
+              description: 'Si el video es vertical (formato shorts)'
+            },
+            quality: {
+              type: 'string',
+              enum: ['low', 'medium', 'high', 'hd'],
+              default: 'medium',
+              example: 'medium',
+              description: 'Calidad del video'
+            },
+            hashtags: {
+              type: 'array',
+              items: {
+                type: 'string',
+                maxLength: 30
+              },
+              example: ['clip prueba'],
+              description: 'Lista de hashtags del clip'
+            },
+            priority: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 10,
+              default: 1,
+              example: 1,
+              description: 'Prioridad del clip (1-10)'
+            },
+            isFeatured: {
+              type: 'boolean',
+              default: false,
+              example: true,
+              description: 'Si el clip está destacado'
             },
             isApproved: {
               type: 'boolean',
-              example: true
+              example: true,
+              description: 'Si el clip está aprobado'
             },
             views: {
               type: 'number',
-              example: 1250
+              example: 1250,
+              description: 'Número de vistas'
             },
             likes: {
               type: 'number',
-              example: 89
+              example: 89,
+              description: 'Número de likes'
             },
             shares: {
               type: 'number',
-              example: 12
-            },
-            creator: {
-              $ref: '#/components/schemas/User'
+              example: 12,
+              description: 'Número de compartidos'
             },
             createdAt: {
               type: 'string',
               format: 'date-time',
               example: '2024-01-15T10:30:00.000Z'
             }
-          }
+          },
+          required: ['title', 'description', 'category', 'youtubeId', 'youtubeUrl', 'thumbnailUrl', 'duration', 'creator']
         },
         // Parámetros comunes
         PaginationQuery: {

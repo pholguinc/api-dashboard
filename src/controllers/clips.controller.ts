@@ -9,14 +9,14 @@ import mongoose from 'mongoose';
 
 export async function getActiveClips(req: Request, res: Response) {
   try {
-    const { 
-      category, 
-      limit = 20, 
+    const {
+      category,
+      limit = 20,
       page = 1,
       featured,
-      userId 
+      userId
     } = req.query as any;
-    
+
     const skip = (page - 1) * limit;
     const now = new Date();
 
@@ -25,12 +25,12 @@ export async function getActiveClips(req: Request, res: Response) {
       status: 'active',
       isActive: true
     };
-    
+
     // Agregar filtro de featured si se solicita
     if (featured === 'true') {
       filter.isFeatured = true;
     }
-    
+
     console.log('🔍 Buscando clips con filtro:', JSON.stringify(filter));
     const totalClips = await ClipModel.countDocuments({});
     const activeClips = await ClipModel.countDocuments(filter);
@@ -82,11 +82,11 @@ export async function getActiveClips(req: Request, res: Response) {
         }
       },
       {
-        $sort: { 
-          isFeatured: -1, 
-          priority: -1, 
-          views: -1, 
-          createdAt: -1 
+        $sort: {
+          isFeatured: -1,
+          priority: -1,
+          views: -1,
+          createdAt: -1
         }
       },
       { $skip: skip },
@@ -201,10 +201,10 @@ export async function recordClipInteraction(req: AuthenticatedRequest, res: Resp
       }], { session });
 
       // Actualizar contadores en el clip
-      const updateField = type === 'view' ? 'views' : 
-                         type === 'like' ? 'likes' : 
-                         type === 'share' ? 'shares' : 
-                         type === 'comment' ? 'comments' : null;
+      const updateField = type === 'view' ? 'views' :
+        type === 'like' ? 'likes' :
+          type === 'share' ? 'shares' :
+            type === 'comment' ? 'comments' : null;
 
       if (updateField) {
         await ClipModel.findByIdAndUpdate(
@@ -233,8 +233,8 @@ export async function recordClipInteraction(req: AuthenticatedRequest, res: Resp
       await session.commitTransaction();
 
       const newCount = clip[updateField as keyof typeof clip] + 1;
-      return sendOk(res, { 
-        action: 'recorded', 
+      return sendOk(res, {
+        action: 'recorded',
         type,
         [updateField || 'count']: newCount,
         pointsEarned: pointsReward[type as keyof typeof pointsReward] || 0
@@ -306,26 +306,26 @@ export async function getTrendingClips(req: Request, res: Response) {
 
 export async function getAllClips(req: Request, res: Response) {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      category, 
-      status, 
+    const {
+      page = 1,
+      limit = 10,
+      category,
+      status,
       isApproved,
       search,
-      creator 
+      creator
     } = req.query as any;
-    
+
     const skip = (page - 1) * limit;
 
     // Construir filtros
     const filter: any = {};
-    
+
     if (category) filter.category = category;
     if (status) filter.status = status;
     if (isApproved !== undefined) filter.isApproved = isApproved === 'true';
     if (creator) filter['creator.name'] = { $regex: creator, $options: 'i' };
-    
+
     if (search) {
       filter.$text = { $search: search };
     }
@@ -355,11 +355,11 @@ export async function createClip(req: AuthenticatedRequest, res: Response) {
     };
 
     const clip = await ClipModel.create(clipData);
-    
+
     return sendCreated(res, clip, 'Clip creado exitosamente');
   } catch (error) {
     console.error('Error in createClip:', error);
-    
+
     if (error instanceof mongoose.Error.ValidationError) {
       const validationErrors = Object.values(error.errors).map(err => ({
         field: err.path,
@@ -367,7 +367,7 @@ export async function createClip(req: AuthenticatedRequest, res: Response) {
       }));
       return sendError(res, 'Datos de entrada inválidos', 400, 'VALIDATION_ERROR', validationErrors);
     }
-    
+
     return sendError(res, 'Error al crear clip', 500, 'CLIP_CREATE_ERROR');
   }
 }
@@ -386,7 +386,7 @@ export async function updateClip(req: AuthenticatedRequest, res: Response) {
       { ...updateData, updatedAt: new Date() },
       { new: true, runValidators: true }
     ).populate('createdBy', 'displayName')
-     .populate('moderatedBy', 'displayName');
+      .populate('moderatedBy', 'displayName');
 
     if (!clip) {
       return sendError(res, 'Clip no encontrado', 404, 'CLIP_NOT_FOUND');
@@ -464,7 +464,7 @@ export async function moderateClip(req: AuthenticatedRequest, res: Response) {
       updateData,
       { new: true, runValidators: true }
     ).populate('createdBy', 'displayName')
-     .populate('moderatedBy', 'displayName');
+      .populate('moderatedBy', 'displayName');
 
     if (!clip) {
       return sendError(res, 'Clip no encontrado', 404, 'CLIP_NOT_FOUND');
@@ -535,7 +535,7 @@ export async function getClipAnalytics(req: Request, res: Response) {
     }
 
     const dateFilter: any = { clipId: new mongoose.Types.ObjectId(id) };
-    
+
     if (startDate && endDate) {
       dateFilter.timestamp = {
         $gte: new Date(startDate),
@@ -551,16 +551,16 @@ export async function getClipAnalytics(req: Request, res: Response) {
             type: '$type',
             date: {
               $dateToString: {
-                format: groupBy === 'hour' ? '%Y-%m-%d-%H' : 
-                       groupBy === 'day' ? '%Y-%m-%d' : 
-                       '%Y-%m',
+                format: groupBy === 'hour' ? '%Y-%m-%d-%H' :
+                  groupBy === 'day' ? '%Y-%m-%d' :
+                    '%Y-%m',
                 date: '$timestamp'
               }
             }
           },
           count: { $sum: 1 },
-          avgWatchTime: { 
-            $avg: { 
+          avgWatchTime: {
+            $avg: {
               $cond: [
                 { $eq: ['$type', 'view'] },
                 '$metadata.watchTime',
