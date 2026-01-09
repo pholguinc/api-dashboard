@@ -451,20 +451,6 @@ router.post('/login-email', validateBody(loginEmailSchema), loginEmail);
  *               metroUsername:
  *                 type: string
  *                 example: "juan_admin"
- *               role:
- *                 type: string
- *                 enum: [admin, moderator, staff]
- *                 default: admin
- *               dni:
- *                 type: string
- *                 example: "12345678"
- *               birthDate:
- *                 type: string
- *                 format: date
- *                 example: "1990-01-15"
- *               phone:
- *                 type: string
- *                 example: "+51987654321"
  *     responses:
  *       201:
  *         description: Usuario creado exitosamente
