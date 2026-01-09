@@ -365,6 +365,8 @@ export async function createClip(req: AuthenticatedRequest, res: Response) {
         field: err.path,
         message: err.message
       }));
+
+
       return sendError(res, 'Datos de entrada inválidos', 400, 'VALIDATION_ERROR', validationErrors);
     }
 
