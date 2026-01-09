@@ -349,10 +349,16 @@ export async function getAllClips(req: Request, res: Response) {
 
 export async function createClip(req: AuthenticatedRequest, res: Response) {
   try {
+    console.log('📝 createClip - req.body recibido:', JSON.stringify(req.body, null, 2));
+    console.log('📝 status recibido:', req.body.status);
+    console.log('📝 tags recibidos:', req.body.tags);
+
     const clipData = {
       ...req.body,
       createdBy: req.user!.id
     };
+
+    console.log('📝 clipData final:', JSON.stringify(clipData, null, 2));
 
     const clip = await ClipModel.create(clipData);
 

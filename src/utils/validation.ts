@@ -260,6 +260,7 @@ export const createClipSchema = z.object({
   category: z.enum(['comedy', 'music', 'dance', 'food', 'travel', 'news', 'sports', 'education'], {
     errorMap: () => ({ message: 'Categoría debe ser válida' })
   }),
+  status: z.enum(['draft', 'active', 'paused', 'reported', 'removed']).default('draft'),
   youtubeId: z.string().min(1, 'ID de video requerido').max(50, 'ID muy largo'),
   youtubeUrl: z.string().url('URL de video inválida'), // Permitir cualquier URL de video
   thumbnailUrl: z.string().url('URL de thumbnail inválida'),
@@ -273,7 +274,7 @@ export const createClipSchema = z.object({
   quality: z.enum(['low', 'medium', 'high', 'hd']).default('medium'),
   publishedAt: z.string().datetime('Fecha de publicación inválida').optional(),
   expiresAt: z.string().datetime('Fecha de expiración inválida').optional(),
-  tags: z.array(z.string().max(50, 'Tag muy largo')).default([]),
+  tags: z.array(z.string().max(50, 'Tag muy largo')).optional(),
   hashtags: z.array(z.string().max(30, 'Hashtag muy largo')).default([]),
   priority: z.number().min(1).max(10).default(1),
   isFeatured: z.boolean().default(false),
