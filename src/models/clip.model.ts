@@ -8,54 +8,54 @@ export interface ClipDocument extends Document {
   description: string;
   category: ClipCategory;
   status: ClipStatus;
-  
+
   // Video information
   youtubeId: string;
   youtubeUrl: string;
   thumbnailUrl: string;
   duration: number; // in seconds
-  
+
   // Metadata
   creator: {
     name: string;
     channel: string;
     avatarUrl?: string;
   };
-  
+
   // Engagement metrics
   views: number;
   likes: number;
   shares: number;
   comments: number;
-  
+
   // Platform specific
   isVertical: boolean;
   quality: 'low' | 'medium' | 'high' | 'hd';
-  
+
   // Moderation
   isApproved: boolean;
   moderatedBy?: mongoose.Types.ObjectId;
   moderatedAt?: Date;
   reportCount: number;
-  
+
   // Scheduling
   publishedAt?: Date;
   expiresAt?: Date;
-  
+
   // SEO and discovery
   tags: string[];
   hashtags: string[];
-  
+
   // Admin
   priority: number;
   isFeatured: boolean;
   createdBy: mongoose.Types.ObjectId;
-  
+
   // Campos para contenido externo
   source: 'internal' | 'tiktok' | 'youtube' | 'instagram';
   externalId?: string;
   isActive: boolean;
-  
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -88,14 +88,14 @@ const ClipSchema = new Schema<ClipDocument>(
       default: 'draft',
       index: true
     },
-    
+
     // Video information
     youtubeId: {
       type: String,
       required: true,
       unique: true,
       validate: {
-        validator: function(v: string) {
+        validator: function (v: string) {
           // Permitir IDs de cualquier longitud para TikToks
           return /^[a-zA-Z0-9_-]+$/.test(v);
         },
@@ -106,7 +106,7 @@ const ClipSchema = new Schema<ClipDocument>(
       type: String,
       required: true,
       validate: {
-        validator: function(v: string) {
+        validator: function (v: string) {
           // Permitir URLs HTTP y HTTPS (para desarrollo local y producción)
           return /^https?:\/\//.test(v);
         },
@@ -117,7 +117,7 @@ const ClipSchema = new Schema<ClipDocument>(
       type: String,
       required: true,
       validate: {
-        validator: function(v: string) {
+        validator: function (v: string) {
           return /^https?:\/\/.+\.(jpg|jpeg|png|webp)$/i.test(v);
         },
         message: 'URL de thumbnail inválida'
@@ -129,7 +129,7 @@ const ClipSchema = new Schema<ClipDocument>(
       min: 1,
       max: 180 // máximo 3 minutos para shorts
     },
-    
+
     // Metadata
     creator: {
       name: {
@@ -147,14 +147,14 @@ const ClipSchema = new Schema<ClipDocument>(
       avatarUrl: {
         type: String,
         validate: {
-          validator: function(v: string) {
+          validator: function (v: string) {
             return !v || /^https?:\/\/.+\.(jpg|jpeg|png|webp)$/i.test(v);
           },
           message: 'URL de avatar inválida'
         }
       }
     },
-    
+
     // Engagement metrics
     views: {
       type: Number,
@@ -176,7 +176,7 @@ const ClipSchema = new Schema<ClipDocument>(
       default: 0,
       min: 0
     },
-    
+
     // Platform specific
     isVertical: {
       type: Boolean,
@@ -188,7 +188,7 @@ const ClipSchema = new Schema<ClipDocument>(
       enum: ['low', 'medium', 'high', 'hd'],
       default: 'medium'
     },
-    
+
     // Moderation
     isApproved: {
       type: Boolean,
@@ -207,7 +207,7 @@ const ClipSchema = new Schema<ClipDocument>(
       default: 0,
       min: 0
     },
-    
+
     // Scheduling
     publishedAt: {
       type: Date,
@@ -217,7 +217,7 @@ const ClipSchema = new Schema<ClipDocument>(
       type: Date,
       index: true
     },
-    
+
     // SEO and discovery
     tags: [{
       type: String,
@@ -229,13 +229,13 @@ const ClipSchema = new Schema<ClipDocument>(
       trim: true,
       maxlength: 30,
       validate: {
-        validator: function(v: string) {
+        validator: function (v: string) {
           return /^[a-zA-Z0-9_áéíóúñÁÉÍÓÚÑ]+$/.test(v);
         },
         message: 'Hashtag inválido'
       }
     }],
-    
+
     // Admin
     priority: {
       type: Number,
@@ -255,7 +255,7 @@ const ClipSchema = new Schema<ClipDocument>(
       required: true,
       index: true
     },
-    
+
     // Campos para contenido externo (TikTok, etc.)
     source: {
       type: String,
@@ -276,9 +276,9 @@ const ClipSchema = new Schema<ClipDocument>(
   },
   {
     timestamps: true,
-    toJSON: { 
+    toJSON: {
       virtuals: true,
-      transform: function(doc, ret) {
+      transform: function (doc, ret) {
         ret.id = ret._id;
         delete ret._id;
         delete ret.__v;
@@ -290,25 +290,25 @@ const ClipSchema = new Schema<ClipDocument>(
 );
 
 // Virtual para engagement rate
-ClipSchema.virtual('engagementRate').get(function() {
+ClipSchema.virtual('engagementRate').get(function () {
   if (this.views === 0) return 0;
   return (((this.likes + this.shares + this.comments) / this.views) * 100).toFixed(2);
 });
 
 // Virtual para duración formateada
-ClipSchema.virtual('formattedDuration').get(function() {
+ClipSchema.virtual('formattedDuration').get(function () {
   const minutes = Math.floor(this.duration / 60);
   const seconds = this.duration % 60;
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 });
 
 // Virtual para verificar si está activo
-ClipSchema.virtual('isCurrentlyActive').get(function() {
+ClipSchema.virtual('isCurrentlyActive').get(function () {
   const now = new Date();
-  return this.status === 'active' && 
-         this.isApproved && 
-         (!this.publishedAt || this.publishedAt <= now) &&
-         (!this.expiresAt || this.expiresAt >= now);
+  return this.status === 'active' &&
+    this.isApproved &&
+    (!this.publishedAt || this.publishedAt <= now) &&
+    (!this.expiresAt || this.expiresAt >= now);
 });
 
 // Índices compuestos para optimizar consultas
@@ -329,26 +329,26 @@ ClipSchema.index({
 });
 
 // Middleware pre-save para validaciones
-ClipSchema.pre('save', function(next) {
+ClipSchema.pre('save', function (next) {
   // Auto-generar publishedAt si no existe y está activo
   if (this.status === 'active' && !this.publishedAt) {
     this.publishedAt = new Date();
   }
-  
+
   // Limpiar hashtags (remover #)
   if (this.hashtags) {
     this.hashtags = this.hashtags.map(tag => tag.replace('#', '').toLowerCase());
   }
-  
+
   // Limpiar tags
   if (this.tags) {
     this.tags = this.tags.map(tag => tag.toLowerCase().trim());
   }
-  
+
   next();
 });
 
-export const ClipModel: Model<ClipDocument> = 
+export const ClipModel: Model<ClipDocument> =
   mongoose.models.Clip || mongoose.model<ClipDocument>('Clip', ClipSchema);
 
 // Modelo para interacciones de clips
@@ -418,11 +418,11 @@ ClipInteractionSchema.index({ timestamp: -1 });
 // Prevenir múltiples likes del mismo usuario
 ClipInteractionSchema.index(
   { clipId: 1, userId: 1, type: 1 },
-  { 
+  {
     unique: true,
     partialFilterExpression: { type: { $in: ['like', 'share'] } }
   }
 );
 
-export const ClipInteractionModel: Model<ClipInteractionDocument> = 
+export const ClipInteractionModel: Model<ClipInteractionDocument> =
   mongoose.models.ClipInteraction || mongoose.model<ClipInteractionDocument>('ClipInteraction', ClipInteractionSchema);
