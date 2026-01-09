@@ -48,6 +48,32 @@ export const googleSignInSchema = z.object({
   idToken: z.string().min(10, 'idToken inválido'),
 });
 
+export const loginEmailSchema = z.object({
+  email: z.string().email('Formato de email inválido'),
+  pin: pinSchema,
+});
+
+export const registerAdminSchema = z.object({
+  email: z.string().email('Formato de email inválido'),
+  pin: pinSchema,
+  fullName: z.string()
+    .min(2, 'Nombre completo debe tener al menos 2 caracteres')
+    .max(100, 'Nombre completo no puede tener más de 100 caracteres'),
+  metroUsername: z.string()
+    .min(3, 'Nombre de usuario debe tener al menos 3 caracteres')
+    .max(20, 'Nombre de usuario no puede tener más de 20 caracteres')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Solo letras, números y guiones bajos')
+    .optional(),
+  dni: z.string()
+    .length(8, 'DNI debe tener exactamente 8 dígitos')
+    .regex(/^\d+$/, 'DNI debe contener solo números')
+    .optional(),
+  birthDate: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha debe tener formato YYYY-MM-DD')
+    .optional(),
+  phone: phoneSchema.optional(),
+});
+
 export const completeProfileSchema = z.object({
   metroUsername: z.string()
     .min(3, 'Nombre de usuario debe tener al menos 3 caracteres')
@@ -67,20 +93,20 @@ export const completeProfileSchema = z.object({
     .refine(dateStr => {
       const birthDate = new Date(dateStr);
       const currentDate = new Date();
-      
+
       // Validar que la fecha sea válida
       if (isNaN(birthDate.getTime())) return false;
-      
+
       // Validar que la fecha no sea futura
       if (birthDate > currentDate) return false;
-      
+
       // Validar que la persona tenga entre 13 y 100 años
       const age = currentDate.getFullYear() - birthDate.getFullYear();
       const monthDiff = currentDate.getMonth() - birthDate.getMonth();
       const dayDiff = currentDate.getDate() - birthDate.getDate();
-      
+
       const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
-      
+
       return actualAge >= 13 && actualAge <= 100;
     }, 'Fecha de nacimiento inválida o edad fuera del rango permitido (13-100 años)')
     .optional(),
@@ -93,7 +119,7 @@ export const completeProfileSchema = z.object({
 export const createProductSchema = z.object({
   name: z.string().min(1, 'Nombre es requerido').max(100, 'Nombre muy largo'),
   description: z.string().min(1, 'Descripción es requerida').max(500, 'Descripción muy larga'),
-  category: z.enum(['digital', 'physical', 'premium'], { 
+  category: z.enum(['digital', 'physical', 'premium'], {
     errorMap: () => ({ message: 'Categoría debe ser: digital, physical o premium' })
   }),
   pointsCost: z.number().min(1, 'Costo en puntos debe ser mayor a 0'),

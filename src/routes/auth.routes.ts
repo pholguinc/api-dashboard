@@ -1,12 +1,15 @@
 import { Router } from 'express';
 import { requestOtp, verifyOtp, setPin, loginPin, googleSignIn } from '../controllers/auth_phone.controller';
-import { 
+import { loginEmail, registerAdmin } from '../controllers/auth_email.controller';
+import {
   validateBody,
   requestOtpSchema,
   verifyOtpSchema,
   setPinSchema,
   loginPinSchema,
-  googleSignInSchema
+  googleSignInSchema,
+  loginEmailSchema,
+  registerAdminSchema
 } from '../utils/validation';
 import { sendOk } from '../utils/response';
 import { env } from '../config/env';
@@ -326,6 +329,183 @@ router.post('/set-pin', validateBody(setPinSchema), setPin);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/login-pin', validateBody(loginPinSchema), loginPin);
+
+/**
+ * @swagger
+ * /api/auth/login-email:
+ *   post:
+ *     tags: [Autenticación]
+ *     summary: Iniciar sesión con Email y PIN
+ *     description: Autentica al usuario usando su correo electrónico y PIN
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - pin
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "usuario@ejemplo.com"
+ *               pin:
+ *                 type: string
+ *                 example: "1234"
+ *                 description: PIN de 4-6 dígitos
+ *     responses:
+ *       200:
+ *         description: Inicio de sesión exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         token:
+ *                           type: string
+ *                           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                         user:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                               example: "507f1f77bcf86cd799439011"
+ *                             displayName:
+ *                               type: string
+ *                               example: "Juan Pérez"
+ *                             role:
+ *                               type: string
+ *                               example: "user"
+ *                             pointsSmart:
+ *                               type: number
+ *                               example: 100
+ *                             hasMetroPremium:
+ *                               type: boolean
+ *                               example: false
+ *                             avatarUrl:
+ *                               type: string
+ *                               example: "https://example.com/avatar.jpg"
+ *                             isProfileComplete:
+ *                               type: boolean
+ *                               example: true
+ *                             metroUsername:
+ *                               type: string
+ *                               example: "juan_perez"
+ *                             fullName:
+ *                               type: string
+ *                               example: "Juan Carlos Pérez"
+ *                             email:
+ *                               type: string
+ *                               example: "usuario@ejemplo.com"
+ *       401:
+ *         description: Credenciales inválidas o usuario no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Cuenta desactivada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/login-email', validateBody(loginEmailSchema), loginEmail);
+
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     tags: [Autenticación]
+ *     summary: Registrar nuevo usuario admin/staff
+ *     description: Crea un nuevo usuario con rol admin, moderator o staff para el dashboard
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - pin
+ *               - fullName
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "nuevo.admin@telemetro.pe"
+ *               pin:
+ *                 type: string
+ *                 example: "1234"
+ *                 description: PIN de 4-6 dígitos
+ *               fullName:
+ *                 type: string
+ *                 example: "Juan Carlos Pérez"
+ *               metroUsername:
+ *                 type: string
+ *                 example: "juan_admin"
+ *               role:
+ *                 type: string
+ *                 enum: [admin, moderator, staff]
+ *                 default: admin
+ *               dni:
+ *                 type: string
+ *                 example: "12345678"
+ *               birthDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "1990-01-15"
+ *               phone:
+ *                 type: string
+ *                 example: "+51987654321"
+ *     responses:
+ *       201:
+ *         description: Usuario creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         message:
+ *                           type: string
+ *                           example: "Usuario creado exitosamente"
+ *                         token:
+ *                           type: string
+ *                         user:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                             displayName:
+ *                               type: string
+ *                             role:
+ *                               type: string
+ *                             metroUsername:
+ *                               type: string
+ *                             fullName:
+ *                               type: string
+ *                             email:
+ *                               type: string
+ *       400:
+ *         description: Email o username ya existe
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/register', validateBody(registerAdminSchema), registerAdmin);
 
 /**
  * @swagger
