@@ -274,8 +274,7 @@ export const createClipSchema = z.object({
   quality: z.enum(['low', 'medium', 'high', 'hd']).default('medium'),
   publishedAt: z.string().datetime('Fecha de publicación inválida').optional(),
   expiresAt: z.string().datetime('Fecha de expiración inválida').optional(),
-  tags: z.array(z.string().max(50, 'Tag muy largo')).optional(),
-  hashtags: z.array(z.string().max(30, 'Hashtag muy largo')).default([]),
+  hashtags: z.array(z.string().max(30, 'Hashtag muy largo')).optional(),
   priority: z.number().min(1).max(10).default(1),
   isFeatured: z.boolean().default(false),
 }).refine(data => {
@@ -306,7 +305,6 @@ export const updateClipSchema = z.object({
   quality: z.enum(['low', 'medium', 'high', 'hd']).optional(),
   publishedAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().optional(),
-  tags: z.array(z.string().max(50)).optional(),
   hashtags: z.array(z.string().max(30)).optional(),
   priority: z.number().min(1).max(10).optional(),
   isFeatured: z.boolean().optional(),

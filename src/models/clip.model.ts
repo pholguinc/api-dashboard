@@ -43,7 +43,6 @@ export interface ClipDocument extends Document {
   expiresAt?: Date;
 
   // SEO and discovery
-  tags: string[];
   hashtags: string[];
 
   // Admin
@@ -219,11 +218,6 @@ const ClipSchema = new Schema<ClipDocument>(
     },
 
     // SEO and discovery
-    tags: [{
-      type: String,
-      trim: true,
-      maxlength: 50
-    }],
     hashtags: [{
       type: String,
       trim: true,
@@ -316,7 +310,6 @@ ClipSchema.index({ status: 1, isApproved: 1, category: 1 });
 ClipSchema.index({ priority: -1, createdAt: -1 });
 ClipSchema.index({ views: -1, likes: -1 });
 ClipSchema.index({ publishedAt: 1, expiresAt: 1 });
-ClipSchema.index({ tags: 1 });
 ClipSchema.index({ hashtags: 1 });
 
 // Índice de texto para búsqueda
@@ -325,7 +318,7 @@ ClipSchema.index({
   description: 'text',
   'creator.name': 'text',
   'creator.channel': 'text',
-  tags: 'text'
+  hashtags: 'text'
 });
 
 // Middleware pre-save para validaciones
@@ -338,11 +331,6 @@ ClipSchema.pre('save', function (next) {
   // Limpiar hashtags (remover #)
   if (this.hashtags) {
     this.hashtags = this.hashtags.map(tag => tag.replace('#', '').toLowerCase());
-  }
-
-  // Limpiar tags
-  if (this.tags) {
-    this.tags = this.tags.map(tag => tag.toLowerCase().trim());
   }
 
   next();
