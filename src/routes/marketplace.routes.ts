@@ -14,6 +14,8 @@ import {
   validateQuery,
   validateParams,
   redeemProductSchema,
+  createProductSchema,
+  updateProductSchema,
   paginationSchema,
   objectIdSchema,
 } from "../utils/validation";
@@ -28,7 +30,7 @@ router.get(
   validateQuery(
     paginationSchema.extend({
       category: z
-        .enum(["digital", "physical", "premium"])
+        .enum(["digital", "physical", "premium", "food_drink", "entertainment", "transport", "services", "shopping", "health", "education", "other"])
         .optional()
         .or(z.literal("undefined"))
         .transform((val) => (val === "undefined" ? undefined : val)),
@@ -227,6 +229,7 @@ router.post(
   "/admin/products",
   auth,
   requireRole(["admin"]),
+  validateBody(createProductSchema),
   ...uploadImage("imageUrl", "products"),
   async (req, res) => {
     try {
@@ -257,25 +260,26 @@ router.put(
   "/admin/products/:id",
   auth,
   requireRole(["admin"]),
+  validateBody(updateProductSchema),
   ...uploadImage("imageUrl", "products"),
   async (req, res) => {
     try {
       const { id } = req.params;
-      
+
       // Obtener imagen anterior antes de actualizar
       const existing = await ProductModel.findById(id);
       const oldImageUrl = existing?.imageUrl;
-      
+
       const updated = await ProductModel.findByIdAndUpdate(id, req.body, { new: true });
       if (!updated) {
         return res.status(404).json({ success: false, data: null, error: { message: 'Producto no encontrado' } });
       }
-      
+
       // Eliminar imagen anterior si se subió una nueva
       if (req.file && oldImageUrl) {
         await deleteOldImage(oldImageUrl);
       }
-      
+
       res.json({ success: true, data: updated, error: null, meta: { timestamp: new Date().toISOString() } });
     } catch (error) {
       res.status(500).json({ success: false, data: null, error: { message: 'Error al actualizar producto' } });
@@ -290,7 +294,7 @@ router.delete(
   async (req, res) => {
     try {
       const { id } = req.params;
-      
+
       // Verificar si el producto existe
       const product = await ProductModel.findById(id);
       if (!product) {
@@ -316,7 +320,7 @@ router.delete(
           .json({
             success: false,
             data: null,
-            error: { 
+            error: {
               message: `No se puede eliminar el producto. Tiene ${pendingRedemptions} canje(s) pendiente(s) o confirmado(s). Solo puedes eliminar productos cuando todos sus canjes estén entregados.`,
               code: 'HAS_PENDING_REDEMPTIONS',
               details: {
@@ -328,7 +332,7 @@ router.delete(
 
       // Si no hay canjes pendientes/confirmados, permitir eliminar
       await ProductModel.findByIdAndDelete(id);
-      
+
       res.json({
         success: true,
         data: { id },
@@ -394,7 +398,7 @@ router.post(
   async (req, res) => {
     try {
       const { code } = req.body;
-      
+
       if (!code) {
         return res.status(400).json({
           success: false,
@@ -460,7 +464,7 @@ router.post(
   async (req, res) => {
     try {
       const { code } = req.body;
-      
+
       if (!code) {
         return res.status(400).json({
           success: false,
@@ -529,9 +533,9 @@ router.get(
   async (req, res) => {
     try {
       const { search, category, isActive } = req.query;
-      
+
       const filter: any = {};
-      
+
       if (search) {
         filter.$or = [
           { title: { $regex: search, $options: 'i' } },
@@ -539,19 +543,19 @@ router.get(
           { merchantName: { $regex: search, $options: 'i' } },
         ];
       }
-      
+
       if (category && category !== 'all') {
         filter.category = category;
       }
-      
+
       if (isActive !== undefined && isActive !== 'undefined') {
         filter.isActive = isActive === 'true';
       }
-      
+
       const offers = await OfferModel.find(filter)
         .sort({ createdAt: -1 })
         .lean();
-      
+
       res.json({
         success: true,
         data: offers,
@@ -708,7 +712,7 @@ router.patch(
   async (req, res) => {
     try {
       const { id } = req.params;
-      
+
       const offer = await OfferModel.findById(id);
       if (!offer) {
         return res.status(404).json({

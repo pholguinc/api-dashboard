@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
-export type ProductCategory = 'digital' | 'physical' | 'premium';
+export type ProductCategory = 'digital' | 'physical' | 'premium' | 'food_drink' | 'entertainment' | 'transport' | 'services' | 'shopping' | 'health' | 'education' | 'other';
 
 export interface ProductDocument extends Document {
   name: string;
@@ -20,7 +20,7 @@ const ProductSchema = new Schema<ProductDocument>(
   {
     name: { type: String, required: true },
     description: { type: String, required: true },
-    category: { type: String, enum: ['digital', 'physical', 'premium'], required: true, index: true },
+    category: { type: String, enum: ['digital', 'physical', 'premium', 'food_drink', 'entertainment', 'transport', 'services', 'shopping', 'health', 'education', 'other'], required: true, index: true },
     pointsCost: { type: Number, required: true },
     stock: { type: Number, default: 0 },
     imageUrl: { type: String, required: true },

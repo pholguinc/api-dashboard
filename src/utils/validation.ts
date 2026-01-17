@@ -119,8 +119,8 @@ export const completeProfileSchema = z.object({
 export const createProductSchema = z.object({
   name: z.string().min(1, 'Nombre es requerido').max(100, 'Nombre muy largo'),
   description: z.string().min(1, 'Descripción es requerida').max(500, 'Descripción muy larga'),
-  category: z.enum(['digital', 'physical', 'premium'], {
-    errorMap: () => ({ message: 'Categoría debe ser: digital, physical o premium' })
+  category: z.enum(['digital', 'physical', 'premium', 'food_drink', 'entertainment', 'transport', 'services', 'shopping', 'health', 'education', 'other'], {
+    errorMap: () => ({ message: 'Categoría inválida' })
   }),
   pointsCost: z.number().min(1, 'Costo en puntos debe ser mayor a 0'),
   stock: z.number().min(0, 'Stock no puede ser negativo').default(0),

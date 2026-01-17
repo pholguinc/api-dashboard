@@ -267,8 +267,8 @@ const options: swaggerJsdoc.Options = {
             },
             category: {
               type: 'string',
-              enum: ['digital', 'physical', 'premium'],
-              example: 'physical'
+              enum: ['digital', 'physical', 'premium', 'food_drink', 'entertainment', 'transport', 'services', 'shopping', 'health', 'education', 'other'],
+              example: 'entertainment'
             },
             price: {
               type: 'integer',
