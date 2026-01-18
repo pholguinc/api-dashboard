@@ -1039,10 +1039,16 @@ const options: swaggerJsdoc.Options = {
       {
         name: 'Perfil de Aplicante',
         description: 'Gestión de perfil de aplicante para facilitar aplicaciones laborales'
+      },
+      {
+        name: 'Media',
+        description: 'Utilidades para el procesamiento y análisis de archivos multimedia'
       }
     ]
   },
   apis: [
+    './src/routes/**/*.ts',
+    './src/controllers/**/*.ts',
     './dist/routes/*.js',
     './dist/routes/admin/*.js',
     './dist/routes/radio-ai/*.js',

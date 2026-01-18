@@ -54,6 +54,7 @@ import radioAiRoutes from './routes/radio-ai/radio.ai.routes';
 import applicantProfileRoutes from './routes/applicant-profile.routes';
 import microsegurosRoutes from './routes/microseguros.routes';
 import streamersPublicRoutes from './routes/streamers.public.routes';
+import mediaRoutes from './routes/media.routes';
 
 export function createApp() {
   const app = express();
@@ -63,7 +64,7 @@ export function createApp() {
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false
   }));
-  
+
   // Configuración CORS dinámica basada en entorno
   const allowedOrigins = [
     'http://localhost:5173',
@@ -88,7 +89,7 @@ export function createApp() {
     const origin = req.headers.origin;
     console.log('CORS Debug - Origin recibido:', origin);
     console.log('CORS Debug - Orígenes permitidos:', allowedOrigins);
-    
+
     // TEMPORALMENTE: Permitir telemetro.pe específicamente
     if (origin && (origin.includes('telemetro.pe') || allowedOrigins.includes(origin))) {
       res.header('Access-Control-Allow-Origin', origin);
@@ -99,11 +100,11 @@ export function createApp() {
     } else {
       console.log('CORS Debug - Origin no permitido:', origin);
     }
-    
+
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-API-Key');
-    
+
     if (req.method === 'OPTIONS') {
       console.log('CORS Debug - Respondiendo a OPTIONS request');
       res.sendStatus(200);
@@ -127,7 +128,7 @@ export function createApp() {
   app.use('/uploads', (req, res, next) => {
     // Configurar headers CORS específicos para archivos estáticos
     const origin = req.headers.origin;
-    
+
     // Permitir orígenes específicos o todos los orígenes permitidos
     if (origin && (allowedOrigins.includes(origin) || origin.includes('telemetro.pe'))) {
       res.header('Access-Control-Allow-Origin', origin);
@@ -140,21 +141,21 @@ export function createApp() {
         res.header('Access-Control-Allow-Origin', origin);
       }
     }
-    
+
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     res.header('Cross-Origin-Resource-Policy', 'cross-origin');
-    
+
     // Configurar cache para imágenes
     res.header('Cache-Control', 'public, max-age=31536000'); // 1 año
-    
+
     if (req.method === 'OPTIONS') {
       res.sendStatus(200);
     } else {
       next();
     }
   }, express.static(path.join(__dirname, '../uploads')));
-  
+
   // Fallback para archivos antiguos guardados en src/uploads durante desarrollo anterior
   app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -214,14 +215,15 @@ export function createApp() {
   app.use('/api/streak', streakRoutes);
   app.use('/api/referral', referralRoutes);
   app.use('/api/streaming-pro', streamingProRoutes);
-  
+  app.use('/api/media', mediaRoutes);
+
   // Ruta de prueba sin autenticación
   app.post('/api/test-stream', async (req, res) => {
     try {
       console.log('🧪 TEST DIRECT: Creando stream de prueba...');
       const { MetroLiveStreamModel } = await import('./models/metro-live.model');
       const { sendCreated, sendError } = await import('./utils/response');
-      
+
       const stream = new MetroLiveStreamModel({
         streamerId: '68c668abb0148145e8ec4677',
         title: 'Stream Test Directo',
@@ -263,7 +265,7 @@ export function createApp() {
       });
     }
   });
-  
+
   app.use('/secure-hls', hlsProxyRoutes);
   app.use('/api/streaming-auth', streamingAuthRoutes);
   app.use('/api/banners', bannersRoutes);
